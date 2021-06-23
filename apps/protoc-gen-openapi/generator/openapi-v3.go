@@ -365,14 +365,18 @@ func (g *OpenAPIv3Generator) addOperationV3(d *v3.Document, op *v3.Operation, pa
 	}
 }
 
+// getSchemaName returns a fully qualified schema name from a typeName
+func getSchemaName(typeName string) string {
+	return strings.ReplaceAll(strings.Trim(typeName, "."), ".", "_")
+}
+
 // schemaReferenceForTypeName returns an OpenAPI JSON Reference to the schema that represents a type.
 func (g *OpenAPIv3Generator) schemaReferenceForTypeName(typeName string) string {
 	if !contains(g.requiredSchemas, typeName) {
 		g.requiredSchemas = append(g.requiredSchemas, typeName)
 	}
-	parts := strings.Split(typeName, ".")
-	lastPart := parts[len(parts)-1]
-	return "#/components/schemas/" + lastPart
+	refName := getSchemaName(typeName)
+	return "#/components/schemas/" + refName
 }
 
 // itemsItemForTypeName is a helper constructor.
@@ -588,7 +592,7 @@ func (g *OpenAPIv3Generator) addSchemasToDocumentV3(d *v3.Document, file *protog
 		// Add the schema to the components.schema list.
 		d.Components.Schemas.AdditionalProperties = append(d.Components.Schemas.AdditionalProperties,
 			&v3.NamedSchemaOrReference{
-				Name: string(message.Desc.Name()),
+				Name: getSchemaName(typeName),
 				Value: &v3.SchemaOrReference{
 					Oneof: &v3.SchemaOrReference_Schema{
 						Schema: &v3.Schema{
